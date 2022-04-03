@@ -110,8 +110,6 @@ class Trainer:
                             seg_metric.update(points, mask_points)
                     val_metric_dict = seg_metric.calc_metric()
                     epoch_metric[phase] = val_metric_dict
-                    epoch_metric[phase]['m'] = epoch_metric[phase]['m1'] * epoch_metric[phase]['m2'] * \
-                                               epoch_metric[phase]['m3'] * epoch_metric[phase]['m4']
                     seg_metric.reset()
             self._dump_to_tensorboard(epoch, epoch_metric)
             self._save_checkpoint(epoch, epoch_metric)

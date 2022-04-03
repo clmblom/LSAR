@@ -91,11 +91,13 @@ class SegmentationMetric:
         self.ious = list()
 
     def calc_metric(self):
-        return {'m1': sum(self.m1s)/(1 if not len(self.m1s) else len(self.m1s)),
-                'm2': sum(self.m2s)/(1 if not len(self.m2s) else len(self.m2s)),
-                'm3': sum(self.m3s)/(1 if not len(self.m3s) else len(self.m3s)),
-                'm4': sum(self.m4s)/(1 if not len(self.m4s) else len(self.m4s)),
-                'iou': sum(self.ious)/(1 if not len(self.ious) else len(self.ious))}
+        m1 = sum(self.m1s)/(1 if not len(self.m1s) else len(self.m1s))
+        m2 = sum(self.m2s)/(1 if not len(self.m2s) else len(self.m2s))
+        m3 = sum(self.m3s)/(1 if not len(self.m3s) else len(self.m3s))
+        m4 = sum(self.m4s)/(1 if not len(self.m4s) else len(self.m4s))
+        iou = sum(self.ious)/(1 if not len(self.ious) else len(self.ious))
+        m = m1*m2*m3*m4
+        return {'m1': m1, 'm2': m2, 'm3': m3, 'm4': m4, 'iou': iou, 'm': m}
 
     def _calc_metric(self, targets, predictions):
         m1 = []

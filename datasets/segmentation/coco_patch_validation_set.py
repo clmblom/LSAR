@@ -11,8 +11,10 @@ class CocoPatchValidationSet(PatchBaseDataset):
                  image_folder,
                  patch_size,
                  augment=False,
+                 sub_batch=1,
                  patch_overlap=(0, 0)):
         super(CocoPatchValidationSet, self).__init__(augment=augment,
+                                                     sub_batch=sub_batch,
                                                      patch_size=patch_size,
                                                      patch_overlap=patch_overlap)
         self.json_path = json_path
