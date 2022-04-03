@@ -1,0 +1,47 @@
+{
+  "name": "exp_name",
+  "model": {
+    "feature_extractor": {
+      "features": 256,
+      "width_div": 16,
+      "height_div": 16
+    },
+    "encoder": {
+      "hidden_size": 256
+    },
+    "decoder": {
+      "hidden_size": 256,
+      "target_len": 100,
+      "norm_first": true
+    }
+  },
+  "test_dataloader": {
+    "batch_size": 512,
+    "shuffle": false,
+    "num_workers": 5,
+    "drop_last": false
+  },
+  "test_datasets": [
+    {
+      "name": "DeterministicSet",
+      "args": {
+        "data_path": "path_to_data_folder",
+        "im_size": [1024, 64],
+        "pad_text": 100,
+        "images": "",
+        "delimiter": " ",
+        "gt": "test.txt",
+        "normalize": true
+      }
+    }
+  ],
+  "tokenizer": "path_to_tokenizer",
+  "trainer": {
+    "epochs": 0,
+    "one_at_time": false,
+    "save_dir": "saved/htr",
+    "save_per": 0,
+    "tensorboard": true,
+    "save_from_epoch": 0
+  }
+}
