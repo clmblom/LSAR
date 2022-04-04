@@ -24,3 +24,16 @@ def separate_string(s):
     class_pred = re.findall(r'<\w\w?\w?>', s)
     string_pred = re.sub(r'<\w\w?\w?>', '', s)
     return string_pred, class_pred
+
+
+class LrScheduler(object):
+    def __init__(self, warm_up):
+        self.warm_up = warm_up
+
+    def __call__(self, epoch):
+        if self.warm_up == 0:
+            return 1
+        elif epoch < self.warm_up and self.warm_up > 0:
+            return min(max(0, (epoch + 1) / self.warm_up), 1)
+        else:
+            return (self.warm_up / (epoch + 1)) ** 0.5

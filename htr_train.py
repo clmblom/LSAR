@@ -1,4 +1,6 @@
 import argparse
+
+import utils.util
 from datasets.htr import deterministic_set, streaming_set
 from data_loaders.base_data_loader import BaseDataLoader
 from parse_config import ConfigParser
@@ -74,21 +76,12 @@ def main(config):
     model = model.to(device)
     criterion = nn.KLDivLoss(reduction='batchmean')
     optimizer = optim.AdamW(model.parameters(), lr=0.0002, betas=(0.9, 0.999))
-    if True:
+    if config['trainer'].get('warm_up_to', False):
         print("Using Lambda lr scheduler...")
-
-        class lr_scheduler(object):
-            def __init__(self, warm_up):
-                self.warm_up = warm_up
-
-            def __call__(self, epoch):
-                if self.warm_up == 0:
-                    return 1
-                elif epoch < self.warm_up and self.warm_up > 0:
-                    return min(max(0, (epoch + 1) / self.warm_up), 1)
-                else:
-                    return (self.warm_up / (epoch + 1)) ** 0.5
-        scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_scheduler(0), verbose=True)
+        print("Warm-up until epoch", config['trainer']['warm_up_to'])
+        scheduler = optim.lr_scheduler.LambdaLR(optimizer,
+                                                lr_lambda=utils.util.LrScheduler(config['trainer']['warm_up_to']),
+                                                verbose=True)
     else:
         scheduler = None
 

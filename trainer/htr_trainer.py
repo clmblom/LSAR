@@ -4,6 +4,8 @@ import os
 import models.metrics as metrics
 from torch.utils.tensorboard import SummaryWriter
 
+import utils.util
+
 
 class Trainer:
     def __init__(self, model, criterion, optimizer, config, data_loader, valid_data_loader=None, device='cpu', scheduler=None):
@@ -134,14 +136,20 @@ class Trainer:
 
                 print('{}:{} Loss: {:.2f} CER: {:.2f}'.format(
                     epoch, phase, epoch_loss, epoch_cer, epoch_cls))
-
+                """
                 if phase == 'val' and (epoch % self.save_per == 0 or epoch_cer < self.best_val_metric) and epoch >= self.save_from_epoch:
                     if epoch_cer < self.best_val_metric:
                         self.best_val_metric = epoch_cer
                     self._save_checkpoint(epoch, epoch_cer)
+                """
+
             self._dump_to_tensorboard(epoch, epoch_metric)
+            if (epoch % self.save_per == 0 or epoch_cer < self.best_val_metric) and epoch >= self.save_from_epoch:
+                if epoch_metric['val']['CER'] < self.best_val_metric:
+                    self.best_val_metric = epoch_metric['val']['CER']
             if self.scheduler:
                 self.scheduler.step()
+            self._save_checkpoint(epoch, epoch_metric['val']['CER'])
         return
 
     def _fine_tune(self):
@@ -153,19 +161,10 @@ class Trainer:
         if self.scheduler:
             self.scheduler.load_state_dict(checkpoint['scheduler'])
             print("Resetting Lambda lr scheduler...")
-            # TODO: Put the lr_scheduler class somewhere else...
-            class lr_scheduler(object):
-                def __init__(self, warm_up):
-                    self.warm_up = warm_up
-
-                def __call__(self, epoch):
-                    if self.warm_up == 0:
-                        return 1
-                    elif epoch < self.warm_up and self.warm_up > 0:
-                        return min(max(0, (epoch + 1) / self.warm_up), 1)
-                    else:
-                        return (self.warm_up / (epoch + 1)) ** 0.5
-            self.scheduler = self.scheduler.__class__(self.optimizer, lr_lambda=lr_scheduler(10), verbose=True)
+            print("Warm-up until epoch", self.config['trainer']['warm_up_to'])
+            self.scheduler = self.scheduler.__class__(self.optimizer,
+                                                      lr_lambda=utils.util.LrScheduler(self.config['trainer']['warm_up']),
+                                                      verbose=True)
 
     def _save_checkpoint(self, epoch, running_cer):
         state = {
