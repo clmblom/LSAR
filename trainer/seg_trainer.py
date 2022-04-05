@@ -105,6 +105,7 @@ class Trainer:
                             patch_sub_batch = patches[sb:].to(self.device)
                             out = self.model(patch_sub_batch)
                             output[sb:] = out.cpu()
+                            output = output > 0.5
                             mask = pm.stitch_mask_tensor(output, wcs, hcs)
                             mask_points = utils.polyfuncs.mask_to_contours(mask)
                             seg_metric.update(points, mask_points)
