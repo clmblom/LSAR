@@ -14,13 +14,7 @@ class InferenceSet(LosenBaseDataset):
                  pad_text=50,
                  augment=False,
                  deterministic=True,
-                 images='',
-                 delimiter=' ',
-                 dataset_size=None,
-                 gt='gt.txt',
-                 normalize=True,
-                 early_stop_p=0,
-                 pad_between=0):
+                 normalize=True):
         super(InferenceSet, self).__init__(im_size=im_size,
                                            pad_text=pad_text,
                                            augment=augment,
@@ -28,16 +22,11 @@ class InferenceSet(LosenBaseDataset):
                                            normalize=normalize)
         self.xml_folder = xml_folder
         self.image_folder = image_folder
-        self.images = images
-        self.gt_file = gt
-        self.data = self.construct_data(delimiter)
         self.deterministic = deterministic
-        self.dataset_size = dataset_size
         self.im_size = im_size
-        self.early_stop_p = early_stop_p
-        self.pad_between = pad_between
+        self.data = self.construct_data()
 
-    def construct_data(self, delimiter):
+    def construct_data(self):
         data = list()
         for root, dirs, files in os.walk(self.xml_folder):
             for file in files:
@@ -76,7 +65,7 @@ class InferenceSet(LosenBaseDataset):
         transform = T.Compose([
             T.Resize(size, interpolation=T.InterpolationMode.BILINEAR),
             T.ToTensor(),
-            T.Normalize([0.8436, 0.7788, 0.6695], [0.1518, 0.1558, 0.1578]),
+            T.Normalize(self.normalization_constants[0], self.normalization_constants[1]),
             T.Pad((0, 0, pad_length, 0), fill=1)
         ])
         image = transform(image)

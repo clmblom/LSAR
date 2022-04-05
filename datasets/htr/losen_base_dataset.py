@@ -9,6 +9,8 @@ import random
 
 
 class LosenBaseDataset(Dataset):
+    normalization_constants = [[0.8436, 0.7788, 0.6695], [0.1518, 0.1558, 0.1578]]
+
     def __init__(self,
                  im_size,
                  pad_text,
@@ -20,7 +22,6 @@ class LosenBaseDataset(Dataset):
         self.augment = augment
         self.tokenizer = tokenizer
         self.normalize = normalize
-        self.normalization_constants = [[0.8436, 0.7788, 0.6695], [0.1518, 0.1558, 0.1578]]
 
     def transform_image(self, image, return_height_scale=False):
         # PIL Image has size (w, h)
