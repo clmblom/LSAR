@@ -57,11 +57,17 @@ class LosenMetric:
 
 class SegmentationMetric:
     def __init__(self):
-        self.m1s = list()  # p covers exactly one gt, under-segmentation
-        self.m2s = list()  # p covers any gt
-        self.m3s = list()  # gt is covered by 1/p, over-segmentation
-        self.m4s = list()  # gt is covered by any p
-        self.ious = list()
+        self.m1s = 0 # p covers exactly one gt, under-segmentation
+        self.m1s_len = 0
+        self.m2s = 0 # p covers any gt
+        self.m2s_len = 0
+        self.m3s = 0  # gt is covered by 1/p, over-segmentation
+        self.m3s_len = 0
+        self.m4s = 0  # gt is covered by any p
+        self.m4s_len = 0
+        self.ious = 0
+        self.ious_len = 0
+
 
     def update(self, targets, predictions):
         # preds is a list of polygon points [[(x_0, y_0), ..., (x_n, y_n)], ...]
@@ -77,25 +83,36 @@ class SegmentationMetric:
                                              shrink_factor=1,
                                              force_shrink_factor=True)
         metric_dict = self._calc_metric(gt_polys, pred_polys)
-        self.m1s.extend(metric_dict['m1'])
-        self.m2s.extend(metric_dict['m2'])
-        self.m3s.extend(metric_dict['m3'])
-        self.m4s.extend(metric_dict['m4'])
-        self.ious.extend(metric_dict['iou'])
+
+        self.m1s += sum(metric_dict['m1'])
+        self.m1s_len += len(metric_dict['m1'])
+        self.m2s += sum(metric_dict['m2'])
+        self.m2s_len += len(metric_dict['m2'])
+        self.m3s += sum(metric_dict['m3'])
+        self.m3s_len += len(metric_dict['m3'])
+        self.m4s += sum(metric_dict['m4'])
+        self.m4s_len += len(metric_dict['m4'])
+        self.ious += sum(metric_dict['iou'])
+        self.ious_len += len(metric_dict['iou'])
 
     def reset(self):
-        self.m1s = list()
-        self.m2s = list()
-        self.m3s = list()
-        self.m4s = list()
-        self.ious = list()
+        self.m1s = 0
+        self.m1s_len = 0
+        self.m2s = 0
+        self.m2s_len = 0
+        self.m3s = 0
+        self.m3s_len = 0
+        self.m4s = 0
+        self.m4s_len = 0
+        self.ious = 0
+        self.ious_len = 0
 
     def calc_metric(self):
-        m1 = sum(self.m1s)/(1 if not len(self.m1s) else len(self.m1s))
-        m2 = sum(self.m2s)/(1 if not len(self.m2s) else len(self.m2s))
-        m3 = sum(self.m3s)/(1 if not len(self.m3s) else len(self.m3s))
-        m4 = sum(self.m4s)/(1 if not len(self.m4s) else len(self.m4s))
-        iou = sum(self.ious)/(1 if not len(self.ious) else len(self.ious))
+        m1 = self.m1s / (self.m1s_len if self.m1s_len else 1)
+        m2 = self.m2s / (self.m2s_len if self.m2s_len else 1)
+        m3 = self.m3s / (self.m3s_len if self.m3s_len else 1)
+        m4 = self.m4s / (self.m4s_len if self.m4s_len else 1)
+        iou = self.ious / (self.ious_len if self.ious_len else 1)
         m = m1*m2*m3*m4
         return {'m1': m1, 'm2': m2, 'm3': m3, 'm4': m4, 'iou': iou, 'm': m}
 
