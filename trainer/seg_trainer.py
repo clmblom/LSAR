@@ -2,9 +2,8 @@ import torch
 import os
 from models.metrics import SegmentationMetric
 from torch.utils.tensorboard import SummaryWriter
-import utils.patchmaker as pm
 import utils.polyfuncs
-
+from .seg_patch_predict import patch_predict
 
 class Trainer:
     def __init__(self, model, criterion, optimizer, config, data_loader, valid_data_loader=None, device='cpu', scheduler=None):
@@ -93,22 +92,9 @@ class Trainer:
                 else:
                     self.model.eval()
                     for i, (images, points, patch_size, patch_overlap, sub_batch) in enumerate(self.dataloaders[phase]):
-                        with torch.set_grad_enabled(phase == 'train'):
-                            patches, wcs, hcs = pm.patchify_tensor(images.squeeze(0),
-                                                                   patch_size=patch_size,
-                                                                   overlap=patch_overlap)
-                            output = torch.zeros((patches.shape[0], 1, patches.shape[2], patches.shape[3]))
-                            for sb in range(0, patches.shape[0], sub_batch):
-                                patch_sub_batch = patches[sb:sb+sub_batch].to(self.device)
-                                out = self.model(patch_sub_batch)
-                                output[sb:sb+sub_batch] = out.cpu()
-                            patch_sub_batch = patches[sb:].to(self.device)
-                            out = self.model(patch_sub_batch)
-                            output[sb:] = out.cpu()
-                            output = output > 0.5
-                            mask = pm.stitch_mask_tensor(output, wcs, hcs)
-                            mask_points = utils.polyfuncs.mask_to_contours(mask)
-                            seg_metric.update(points, mask_points)
+                        mask = patch_predict(self.model, images, patch_size, patch_overlap, sub_batch, self.device)
+                        mask_points = utils.polyfuncs.mask_to_contours(mask)
+                        seg_metric.update(points, mask_points)
                     val_metric_dict = seg_metric.calc_metric()
                     epoch_metric[phase] = val_metric_dict
                     seg_metric.reset()
